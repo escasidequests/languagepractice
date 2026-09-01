@@ -590,6 +590,149 @@ main#app {
   color: inherit;
 }
 
+/* ---------- Forms (Add a word / Sentences) ---------- */
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 14px 0 6px;
+}
+
+.field-label:first-of-type {
+  margin-top: 4px;
+}
+
+.text-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.add-word-form .primary-btn {
+  margin-top: 18px;
+}
+
+.sentence-textarea {
+  min-height: 68px;
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.add-word-status {
+  text-align: center;
+  font-size: 13px;
+  color: var(--miss);
+  margin: 10px 0 0;
+}
+
+/* ---------- Swipeable custom-content rows ---------- */
+
+.swipe-row {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  transition: opacity 0.18s ease, max-height 0.18s ease;
+}
+
+.swipe-delete-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--miss);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 18px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.swipe-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transform: translateX(0);
+  transition: transform 0.2s ease;
+  touch-action: pan-y;
+}
+
+.swipe-content.dragging {
+  transition: none;
+}
+
+.custom-row-speak-btn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.custom-row-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.custom-row-native {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.custom-row-meaning {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.custom-row-sub {
+  font-size: 11px;
+  color: var(--ink-soft);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.custom-row-delete-btn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  font-size: 14px;
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.custom-list-empty {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13px;
+  padding: 10px 0;
+}
+
 /* ---------- Browse (full word list) screen ---------- */
 
 .browse-direction-row {

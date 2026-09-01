@@ -22,6 +22,8 @@
     <section class="screen home">
       <button class="numbers-cta" id="goNumbersBtn">🔢 Numbers Trainer (0–9,999) →</button>
       <button class="numbers-cta" id="goBrowseBtn">📋 Browse full word list →</button>
+      <button class="numbers-cta" id="goAddWordBtn">➕ Add your own word →</button>
+      <button class="numbers-cta" id="goSentencesBtn">💬 Saved Sentences →</button>
 
       <div class="lang-tabs" id="langTabs"></div>
 
@@ -123,6 +125,60 @@
       <input type="search" id="browseSearch" class="browse-search" placeholder="Search terms or meanings…" autocomplete="off" />
 
       <div id="browseList"></div>
+    </section>
+  </template>
+
+  <template id="tpl-add-word">
+    <section class="screen add-word">
+      <div class="lang-tabs" id="addWordLangTabs"></div>
+
+      <form class="card-panel add-word-form" id="addWordForm" novalidate>
+        <h2>New word or phrase</h2>
+
+        <label class="field-label" for="addWordTerm">Term (in the language)</label>
+        <input type="text" id="addWordTerm" class="text-input" placeholder="e.g. ¿Dónde está la playa?" autocomplete="off" required />
+
+        <label class="field-label" for="addWordMeaning">English meaning</label>
+        <input type="text" id="addWordMeaning" class="text-input" placeholder="e.g. Where's the beach?" autocomplete="off" required />
+
+        <label class="field-label" for="addWordPron">Pronunciation guide (optional)</label>
+        <input type="text" id="addWordPron" class="text-input" placeholder="e.g. DOHN-deh es-TAH lah PLAH-yah" autocomplete="off" />
+
+        <label class="field-label" for="addWordSection">Category</label>
+        <select id="addWordSection" class="text-input"></select>
+
+        <button type="submit" class="primary-btn" id="addWordSaveBtn">Save word</button>
+        <p class="add-word-status" id="addWordStatus" hidden></p>
+      </form>
+
+      <div class="card-panel">
+        <h2>Your added words</h2>
+        <div id="addWordList"></div>
+      </div>
+    </section>
+  </template>
+
+  <template id="tpl-sentences">
+    <section class="screen sentences">
+      <div class="lang-tabs" id="sentencesLangTabs"></div>
+
+      <form class="card-panel add-word-form" id="sentenceForm" novalidate>
+        <h2>Save a sentence</h2>
+
+        <label class="field-label" for="sentenceNative">Phrase (in the language)</label>
+        <textarea id="sentenceNative" class="text-input sentence-textarea" placeholder="e.g. Perdona, ¿podrías recomendarme un buen restaurante de pescado cerca de aquí?" required></textarea>
+
+        <label class="field-label" for="sentenceMeaning">English meaning</label>
+        <textarea id="sentenceMeaning" class="text-input sentence-textarea" placeholder="e.g. Excuse me, could you recommend a good seafood restaurant near here?" required></textarea>
+
+        <button type="submit" class="primary-btn" id="sentenceSaveBtn">Save sentence</button>
+        <p class="add-word-status" id="sentenceStatus" hidden></p>
+      </form>
+
+      <div class="card-panel">
+        <h2>Saved sentences</h2>
+        <div id="sentenceList"></div>
+      </div>
     </section>
   </template>
 

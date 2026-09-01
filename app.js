@@ -52,11 +52,122 @@
     return cards;
   }
 
-  const DECKS = { es: buildDeck("es"), pt: buildDeck("pt") };
+  const BASE_DECKS = { es: buildDeck("es"), pt: buildDeck("pt") };
+
+  const DEFAULT_CUSTOM_SECTION = "My Words";
+
+  /* ---------------- custom (user-added) words ---------------- */
+
+  const CUSTOM_WORDS_KEY = "phrasePractice.customWords.v1";
+
+  function loadCustomWords() {
+    try {
+      return JSON.parse(localStorage.getItem(CUSTOM_WORDS_KEY) || "{}");
+    } catch (e) {
+      return {};
+    }
+  }
+  function saveCustomWords(store) {
+    try {
+      localStorage.setItem(CUSTOM_WORDS_KEY, JSON.stringify(store));
+    } catch (e) {
+      /* storage unavailable — added word still works this session, just won't persist */
+    }
+  }
+  function makeId() {
+    return window.crypto && window.crypto.randomUUID
+      ? window.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  }
+  function customWordsFor(langKey) {
+    const store = loadCustomWords();
+    return store[langKey] || [];
+  }
+  function addCustomWord(langKey, { phrase, meaning, pron, section }) {
+    const store = loadCustomWords();
+    if (!store[langKey]) store[langKey] = [];
+    store[langKey].push({
+      id: makeId(),
+      phrase: phrase.trim(),
+      meaning: meaning.trim(),
+      pron: (pron || "").trim(),
+      section: (section || DEFAULT_CUSTOM_SECTION).trim() || DEFAULT_CUSTOM_SECTION
+    });
+    saveCustomWords(store);
+  }
+  function deleteCustomWord(langKey, id) {
+    const store = loadCustomWords();
+    if (!store[langKey]) return;
+    store[langKey] = store[langKey].filter((w) => w.id !== id);
+    saveCustomWords(store);
+    // Tidy up any practice stats recorded against the deleted card.
+    delete STATS[`${langKey}|custom|${id}`];
+    saveStats(STATS);
+  }
+
+  function customCards(langKey) {
+    return customWordsFor(langKey).map((w) => ({
+      key: `${langKey}|custom|${w.id}`,
+      lang: langKey,
+      section: w.section || DEFAULT_CUSTOM_SECTION,
+      native: w.phrase,
+      speak: primaryForm(w.phrase),
+      meaning: w.meaning,
+      pron: w.pron || "",
+      custom: true,
+      id: w.id
+    }));
+  }
+
+  // Base guide phrases + whatever the user has added, recomputed on every
+  // call so a just-added or just-deleted word shows up immediately.
+  function getDeck(langKey) {
+    return BASE_DECKS[langKey].concat(customCards(langKey));
+  }
+
+  /* ---------------- saved sentences (not part of training) ---------------- */
+  // A separate personal phrasebook: longer sentences you've translated and
+  // want to keep handy, kept entirely apart from the training deck above.
+
+  const SENTENCES_KEY = "phrasePractice.sentences.v1";
+
+  function loadSentences() {
+    try {
+      return JSON.parse(localStorage.getItem(SENTENCES_KEY) || "{}");
+    } catch (e) {
+      return {};
+    }
+  }
+  function saveSentencesStore(store) {
+    try {
+      localStorage.setItem(SENTENCES_KEY, JSON.stringify(store));
+    } catch (e) {
+      /* storage unavailable — saved sentence still works this session, just won't persist */
+    }
+  }
+  function sentencesFor(langKey) {
+    const store = loadSentences();
+    return store[langKey] || [];
+  }
+  function addSentence(langKey, { native, meaning }) {
+    const store = loadSentences();
+    if (!store[langKey]) store[langKey] = [];
+    store[langKey].push({ id: makeId(), native: native.trim(), meaning: meaning.trim() });
+    saveSentencesStore(store);
+  }
+  function deleteSentence(langKey, id) {
+    const store = loadSentences();
+    if (!store[langKey]) return;
+    store[langKey] = store[langKey].filter((s) => s.id !== id);
+    saveSentencesStore(store);
+  }
 
   function sectionNames(langKey) {
     const names = PHRASE_DATA[langKey].sections.map((s) => s.name);
     if (PHRASE_DATA[langKey].numbers) names.push("Numbers");
+    customCards(langKey).forEach((c) => {
+      if (!names.includes(c.section)) names.push(c.section);
+    });
     return names;
   }
 
@@ -257,6 +368,97 @@
 
   const canRecord = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
 
+  /* ---------------- swipeable "your content" rows ---------------- */
+  // Shared by "Add a word"'s own-word list and the Sentences list: a row
+  // with a speaker button and text, swipeable left to reveal a delete
+  // action (with a plain tap-to-delete button too, for non-touch devices).
+
+  const HTML_ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]);
+  }
+
+  function buildSwipeableRow({ speakText, locale, lines, onDelete }) {
+    const row = document.createElement("div");
+    row.className = "swipe-row";
+
+    const deleteBg = document.createElement("div");
+    deleteBg.className = "swipe-delete-bg";
+    deleteBg.textContent = "🗑️ Delete";
+
+    const content = document.createElement("div");
+    content.className = "swipe-content";
+
+    if (speakText) {
+      const speakBtn = document.createElement("button");
+      speakBtn.className = "custom-row-speak-btn";
+      speakBtn.setAttribute("aria-label", "Hear pronunciation");
+      speakBtn.textContent = "🔊";
+      speakBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        speak(speakText, locale);
+      });
+      content.appendChild(speakBtn);
+    }
+
+    const text = document.createElement("div");
+    text.className = "custom-row-text";
+    text.innerHTML = lines.map((l) => `<div class="${l.cls}">${escapeHtml(l.text)}</div>`).join("");
+    content.appendChild(text);
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "custom-row-delete-btn";
+    deleteBtn.setAttribute("aria-label", "Delete");
+    deleteBtn.textContent = "🗑️";
+    deleteBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      confirmDelete();
+    });
+    content.appendChild(deleteBtn);
+
+    row.appendChild(deleteBg);
+    row.appendChild(content);
+
+    function confirmDelete() {
+      row.classList.add("removing");
+      content.style.transform = "translateX(-100%)";
+      setTimeout(onDelete, 180);
+    }
+    deleteBg.addEventListener("click", confirmDelete);
+
+    const REVEAL = 76;
+    let startX = 0;
+    let dx = 0;
+    let dragging = false;
+
+    content.addEventListener(
+      "touchstart",
+      (e) => {
+        startX = e.touches[0].clientX;
+        dragging = true;
+        content.classList.add("dragging");
+      },
+      { passive: true }
+    );
+    content.addEventListener(
+      "touchmove",
+      (e) => {
+        if (!dragging) return;
+        dx = Math.min(0, Math.max(e.touches[0].clientX - startX, -(REVEAL + 24)));
+        content.style.transform = `translateX(${dx}px)`;
+      },
+      { passive: true }
+    );
+    content.addEventListener("touchend", () => {
+      dragging = false;
+      content.classList.remove("dragging");
+      content.style.transform = dx < -REVEAL / 2 ? `translateX(-${REVEAL}px)` : "translateX(0)";
+      dx = 0;
+    });
+
+    return row;
+  }
+
   /* ================= state ================= */
 
   const state = {
@@ -283,7 +485,13 @@
 
     // Browse (full word list)
     browseLangKey: "es",
-    browseDirection: "native-en" // "native-en" = term bolded on top; "en-native" = English bolded on top
+    browseDirection: "native-en", // "native-en" = term bolded on top; "en-native" = English bolded on top
+
+    // Add a word
+    addWordLangKey: "es",
+
+    // Saved sentences
+    sentencesLangKey: "es"
   };
 
   sectionNames(state.langKey).forEach((s) => state.activeSections.add(s));
@@ -297,7 +505,9 @@
     numbersLearn: "numbersHome",
     numbersQuiz: "numbersHome",
     numbersSummary: "numbersHome",
-    browse: "home"
+    browse: "home",
+    addWord: "home",
+    sentences: "home"
   };
 
   const SCREEN_RENDERERS = {
@@ -308,7 +518,9 @@
     numbersLearn: [() => "Learn numbers", renderNumbersLearn],
     numbersQuiz: [() => "Numbers quiz", renderNumbersQuiz],
     numbersSummary: [() => "Numbers round complete", renderNumbersSummary],
-    browse: [() => "Browse word list", renderBrowse]
+    browse: [() => "Browse word list", renderBrowse],
+    addWord: [() => "Add a word", renderAddWord],
+    sentences: [() => "Saved Sentences", renderSentences]
   };
 
   function render() {
@@ -415,11 +627,21 @@
       render();
     });
 
+    document.getElementById("goAddWordBtn").addEventListener("click", () => {
+      state.screen = "addWord";
+      render();
+    });
+
+    document.getElementById("goSentencesBtn").addEventListener("click", () => {
+      state.screen = "sentences";
+      render();
+    });
+
     updateDeckCount();
   }
 
   function currentFilteredDeck() {
-    return DECKS[state.langKey].filter((c) => {
+    return getDeck(state.langKey).filter((c) => {
       if (!state.activeSections.has(c.section)) return false;
       if (state.weakOnly && !everMissed(c.key)) return false;
       return true;
@@ -723,10 +945,10 @@
     const rows = []; // { el, searchText }
     const termFirst = state.browseDirection === "native-en";
 
-    // Group DECKS[langKey] back by section, preserving the guide's own
-    // section order (DECKS was built in that order, with Numbers last).
+    // Group the deck back by section, preserving the guide's own section
+    // order (base sections first, Numbers, then any custom sections last).
     const bySection = new Map();
-    DECKS[state.browseLangKey].forEach((card) => {
+    getDeck(state.browseLangKey).forEach((card) => {
       if (!bySection.has(card.section)) bySection.set(card.section, []);
       bySection.get(card.section).push(card);
     });
@@ -794,6 +1016,181 @@
         empty.remove();
       }
     });
+  }
+
+  /* ---------- add a word screen ---------- */
+
+  function renderAddWord() {
+    const tpl = document.getElementById("tpl-add-word");
+    app.appendChild(tpl.content.cloneNode(true));
+
+    const langTabs = document.getElementById("addWordLangTabs");
+    Object.keys(PHRASE_DATA).forEach((key) => {
+      const langOpt = PHRASE_DATA[key];
+      const btn = document.createElement("button");
+      btn.className = "lang-tab" + (state.addWordLangKey === key ? " active" : "");
+      btn.innerHTML = `<span class="flag">${langOpt.flag}</span>${langOpt.label}<span class="sub">${langOpt.sublabel}</span>`;
+      btn.addEventListener("click", () => {
+        state.addWordLangKey = key;
+        render();
+      });
+      langTabs.appendChild(btn);
+    });
+
+    const langKey = state.addWordLangKey;
+    const lang = PHRASE_DATA[langKey];
+
+    const sectionSelect = document.getElementById("addWordSection");
+    const sectionOptions = sectionNames(langKey).filter((s) => s !== "Numbers");
+    if (!sectionOptions.includes(DEFAULT_CUSTOM_SECTION)) sectionOptions.push(DEFAULT_CUSTOM_SECTION);
+    sectionOptions.forEach((name) => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      if (name === DEFAULT_CUSTOM_SECTION) opt.selected = true;
+      sectionSelect.appendChild(opt);
+    });
+
+    const form = document.getElementById("addWordForm");
+    const statusEl = document.getElementById("addWordStatus");
+    const termInput = document.getElementById("addWordTerm");
+    const meaningInput = document.getElementById("addWordMeaning");
+    const pronInput = document.getElementById("addWordPron");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const term = termInput.value.trim();
+      const meaning = meaningInput.value.trim();
+      if (!term || !meaning) {
+        statusEl.textContent = "Please fill in both the term and its English meaning.";
+        statusEl.hidden = false;
+        return;
+      }
+      statusEl.hidden = true;
+      const section = sectionSelect.value || DEFAULT_CUSTOM_SECTION;
+      addCustomWord(langKey, { phrase: term, meaning, pron: pronInput.value, section });
+      // If this is the language currently selected for flashcard practice,
+      // make sure the (possibly brand-new) section is included by default.
+      if (langKey === state.langKey) state.activeSections.add(section);
+      termInput.value = "";
+      meaningInput.value = "";
+      pronInput.value = "";
+      termInput.focus();
+      renderAddWordList();
+    });
+
+    function renderAddWordList() {
+      const listEl = document.getElementById("addWordList");
+      listEl.innerHTML = "";
+      const words = customWordsFor(langKey);
+      if (!words.length) {
+        const empty = document.createElement("p");
+        empty.className = "custom-list-empty";
+        empty.textContent = `No added words yet for ${lang.label}.`;
+        listEl.appendChild(empty);
+        return;
+      }
+      words
+        .slice()
+        .reverse() // most recently added first
+        .forEach((w) => {
+          const lines = [
+            { cls: "custom-row-native", text: w.phrase },
+            { cls: "custom-row-meaning", text: w.meaning }
+          ];
+          if (w.section) lines.push({ cls: "custom-row-sub", text: w.section });
+          const row = buildSwipeableRow({
+            speakText: primaryForm(w.phrase),
+            locale: lang.locale,
+            lines,
+            onDelete: () => {
+              deleteCustomWord(langKey, w.id);
+              renderAddWordList();
+            }
+          });
+          listEl.appendChild(row);
+        });
+    }
+
+    renderAddWordList();
+  }
+
+  /* ---------- saved sentences screen ---------- */
+
+  function renderSentences() {
+    const tpl = document.getElementById("tpl-sentences");
+    app.appendChild(tpl.content.cloneNode(true));
+
+    const langTabs = document.getElementById("sentencesLangTabs");
+    Object.keys(PHRASE_DATA).forEach((key) => {
+      const langOpt = PHRASE_DATA[key];
+      const btn = document.createElement("button");
+      btn.className = "lang-tab" + (state.sentencesLangKey === key ? " active" : "");
+      btn.innerHTML = `<span class="flag">${langOpt.flag}</span>${langOpt.label}<span class="sub">${langOpt.sublabel}</span>`;
+      btn.addEventListener("click", () => {
+        state.sentencesLangKey = key;
+        render();
+      });
+      langTabs.appendChild(btn);
+    });
+
+    const langKey = state.sentencesLangKey;
+    const lang = PHRASE_DATA[langKey];
+
+    const form = document.getElementById("sentenceForm");
+    const statusEl = document.getElementById("sentenceStatus");
+    const nativeInput = document.getElementById("sentenceNative");
+    const meaningInput = document.getElementById("sentenceMeaning");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const native = nativeInput.value.trim();
+      const meaning = meaningInput.value.trim();
+      if (!native || !meaning) {
+        statusEl.textContent = "Please fill in both the phrase and its English meaning.";
+        statusEl.hidden = false;
+        return;
+      }
+      statusEl.hidden = true;
+      addSentence(langKey, { native, meaning });
+      nativeInput.value = "";
+      meaningInput.value = "";
+      nativeInput.focus();
+      renderSentenceList();
+    });
+
+    function renderSentenceList() {
+      const listEl = document.getElementById("sentenceList");
+      listEl.innerHTML = "";
+      const items = sentencesFor(langKey);
+      if (!items.length) {
+        const empty = document.createElement("p");
+        empty.className = "custom-list-empty";
+        empty.textContent = `No saved ${lang.label} sentences yet.`;
+        listEl.appendChild(empty);
+        return;
+      }
+      items
+        .slice()
+        .reverse() // most recently added first
+        .forEach((s) => {
+          const row = buildSwipeableRow({
+            speakText: s.native,
+            locale: lang.locale,
+            lines: [
+              { cls: "custom-row-native", text: s.native },
+              { cls: "custom-row-meaning", text: s.meaning }
+            ],
+            onDelete: () => {
+              deleteSentence(langKey, s.id);
+              renderSentenceList();
+            }
+          });
+          listEl.appendChild(row);
+        });
+    }
+
+    renderSentenceList();
   }
 
   /* ==================== Numbers Trainer ==================== */
