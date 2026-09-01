@@ -434,6 +434,27 @@ main#app {
   color: var(--ink-soft);
 }
 
+.debug-voices-btn {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.debug-voices-list {
+  margin: 10px 0 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 240px;
+  overflow-y: auto;
+  color: var(--ink-soft);
+}
+
 .mode-hint {
   margin: 10px 2px 0;
   font-size: 13px;

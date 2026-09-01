@@ -342,6 +342,24 @@
 
     setupVoicePicker(document.getElementById("voiceSelect"), document.getElementById("voiceTestBtn"), state.langKey);
 
+    const debugBtn = document.getElementById("debugVoicesBtn");
+    const debugList = document.getElementById("debugVoicesList");
+    debugBtn.addEventListener("click", () => {
+      if (!debugList.hidden) {
+        debugList.hidden = true;
+        return;
+      }
+      loadVoices();
+      debugList.textContent = voicesCache.length
+        ? voicesCache
+            .slice()
+            .sort((a, b) => a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name))
+            .map((v) => `${v.lang}  ${v.name}${v.localService ? "" : "  (online)"}`)
+            .join("\n") + `\n\n${voicesCache.length} voice(s) total reported to this page.`
+        : "This browser reports 0 voices right now (they may still be loading — try again in a moment, or reopen this page).";
+      debugList.hidden = false;
+    });
+
     document.querySelectorAll("#directionRow .pill").forEach((btn) => {
       if (btn.dataset.dir === state.direction) btn.classList.add("active");
       btn.addEventListener("click", () => {
