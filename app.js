@@ -711,6 +711,9 @@
         : `<p class="feedback-headline">Not quite ❌</p><p class="feedback-detail">You typed: ${quiz.lastAnswer || "(nothing)"}</p><p class="feedback-detail">Correct: ${target.toLocaleString("en-US")} — ${NUMBER_WORDS.toWords(state.numLangKey, target)}</p>`;
       nextBtn.hidden = false;
       nextBtn.addEventListener("click", advanceQuiz);
+      // Focus the Next button so a bare Enter press (native button-activation
+      // behavior) advances to the next question without needing a click.
+      nextBtn.focus();
     } else {
       input.focus();
     }
