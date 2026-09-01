@@ -89,6 +89,20 @@ main#app {
 
 /* ---------- Home screen ---------- */
 
+.numbers-cta {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 18px;
+  border-radius: 14px;
+  border: 1.5px dashed var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .lang-tabs {
   display: flex;
   gap: 8px;
@@ -396,6 +410,134 @@ main#app {
 
 .rate-btn.miss { background: var(--miss-soft); color: var(--miss); }
 .rate-btn.know { background: var(--know-soft); color: var(--know); }
+
+.mode-hint {
+  margin: 10px 2px 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* ---------- Numbers: Learn mode ---------- */
+
+.num-seen {
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 0 0 10px;
+}
+
+.number-display {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  margin-bottom: 18px;
+}
+
+.number-digits {
+  font-size: 56px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.number-words {
+  margin: 14px 0 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: capitalize;
+}
+
+.number-display.quiz {
+  min-height: 140px;
+}
+
+.number-prompt {
+  font-size: 16px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.switch-mode-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+/* ---------- Numbers: Quiz mode ---------- */
+
+.quiz-score {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+}
+
+.answer-form {
+  display: flex;
+  gap: 10px;
+}
+
+.answer-input {
+  flex: 1;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 20px;
+  text-align: center;
+}
+
+.answer-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.answer-form .primary-btn {
+  width: auto;
+  padding: 14px 20px;
+  margin-top: 0;
+}
+
+.quiz-feedback {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.quiz-feedback.correct {
+  background: var(--know-soft);
+  color: var(--know);
+}
+
+.quiz-feedback.incorrect {
+  background: var(--miss-soft);
+  color: var(--miss);
+}
+
+.quiz-feedback .feedback-headline {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.quiz-feedback .feedback-detail {
+  font-size: 14px;
+  margin: 2px 0;
+  color: inherit;
+}
 
 /* ---------- Summary screen ---------- */
 

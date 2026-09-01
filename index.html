@@ -20,6 +20,8 @@
 
   <template id="tpl-home">
     <section class="screen home">
+      <button class="numbers-cta" id="goNumbersBtn">🔢 Numbers Trainer (0–9,999) →</button>
+
       <div class="lang-tabs" id="langTabs"></div>
 
       <div class="card-panel">
@@ -99,7 +101,91 @@
     </section>
   </template>
 
+  <template id="tpl-numbers-home">
+    <section class="screen home">
+      <div class="lang-tabs" id="numLangTabs"></div>
+
+      <div class="card-panel">
+        <h2>Range</h2>
+        <div class="pill-row" id="numRangeRow">
+          <button class="pill" data-range="0-99">0–99</button>
+          <button class="pill" data-range="0-999">0–999</button>
+          <button class="pill" data-range="0-9999">0–9,999</button>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <h2>Mode</h2>
+        <div class="pill-row" id="numModeRow">
+          <button class="pill" data-mode="learn">📖 Learn (see + hear)</button>
+          <button class="pill" data-mode="quiz">⌨️ Quiz (hear, type it)</button>
+        </div>
+        <p class="mode-hint" id="modeHint"></p>
+      </div>
+
+      <button class="primary-btn" id="numStartBtn">Start</button>
+    </section>
+  </template>
+
+  <template id="tpl-numbers-learn">
+    <section class="screen numbers-learn">
+      <p class="num-seen" id="numSeenCount"></p>
+
+      <div class="number-display">
+        <p class="number-digits" id="numDigits"></p>
+        <p class="number-words" id="numWords"></p>
+      </div>
+
+      <div class="audio-row">
+        <button class="round-btn" id="numSpeakBtn" aria-label="Hear this number">🔊</button>
+      </div>
+
+      <button class="primary-btn" id="numNextBtn">Next number →</button>
+
+      <button class="link-btn switch-mode-btn" id="numToQuizBtn">Ready to test yourself? Switch to Quiz mode →</button>
+    </section>
+  </template>
+
+  <template id="tpl-numbers-quiz">
+    <section class="screen numbers-quiz">
+      <div class="progress-row">
+        <div class="progress-track"><div class="progress-fill" id="numProgressFill"></div></div>
+        <span id="numProgressLabel" class="progress-label"></span>
+      </div>
+      <p class="quiz-score" id="quizScore"></p>
+
+      <div class="number-display quiz">
+        <p class="number-prompt">Listen and type the number</p>
+      </div>
+
+      <div class="audio-row">
+        <button class="round-btn" id="numQuizSpeakBtn" aria-label="Replay number">🔊</button>
+      </div>
+
+      <form id="numAnswerForm" class="answer-form" novalidate>
+        <input type="text" inputmode="numeric" id="numAnswerInput" class="answer-input" placeholder="Type what you heard" autocomplete="off" />
+        <button type="submit" class="primary-btn" id="numSubmitBtn">Check</button>
+      </form>
+
+      <div class="quiz-feedback" id="quizFeedback" hidden></div>
+
+      <button class="primary-btn" id="numNextQuizBtn" hidden>Next →</button>
+
+      <button class="link-btn switch-mode-btn" id="numToLearnBtn">← Back to Learn mode</button>
+    </section>
+  </template>
+
+  <template id="tpl-numbers-summary">
+    <section class="screen summary">
+      <h2>Numbers round complete 🔢</h2>
+      <div class="summary-stats" id="numSummaryStats"></div>
+      <button class="primary-btn" id="numPracticeAgainBtn">Practice again</button>
+      <button class="secondary-btn" id="numMenuBtn">Back to menu</button>
+    </section>
+  </template>
+
   <script src="data.js"></script>
+  <script src="numbers.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -25,6 +25,17 @@ browser.
   cards resurface later in the same session and are prioritized first next
   time you study. Progress is stored locally in the browser (`localStorage`)
   — nothing leaves your device.
+- **Numbers Trainer** — a separate section (linked from the home screen) that
+  covers every number 0–9,999, not just the ones listed in the guide. It
+  generates correct Spanish/Portuguese number words on the fly (`numbers.js`),
+  including the tricky bits — `cien` vs `ciento`, Portuguese's extra "e"
+  connectors, irregular hundreds like `quinientos`/`quinhentos`, etc.
+  - **Learn mode**: shows the digits and the written-out word together while
+    speaking it, to build the number ↔ sound association.
+  - **Quiz mode**: hides the digits, speaks the number, and you type what you
+    heard. Each answer is checked against the actual number and scored;
+    a round is 15 numbers with a running score and an end-of-round accuracy
+    summary.
 
 ## Running locally
 
