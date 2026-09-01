@@ -68,7 +68,14 @@ body {
   text-align: center;
 }
 
-.topbar-spacer { width: 34px; display: inline-block; }
+.version-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--ink-soft);
+  opacity: 0.7;
+  white-space: nowrap;
+  cursor: default;
+}
 
 .icon-btn {
   width: 34px;
@@ -581,6 +588,95 @@ main#app {
   font-size: 14px;
   margin: 2px 0;
   color: inherit;
+}
+
+/* ---------- Browse (full word list) screen ---------- */
+
+.browse-search {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  margin: 16px 0;
+  box-shadow: var(--shadow);
+}
+
+.browse-search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.browse-section-header {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  margin: 22px 4px 8px;
+  font-weight: 700;
+}
+
+.browse-section-header:first-child {
+  margin-top: 4px;
+}
+
+.browse-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+
+.browse-row.no-match,
+.browse-section-header.no-match {
+  display: none;
+}
+
+.browse-speak-btn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.browse-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.browse-term {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.browse-pron {
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-top: 1px;
+}
+
+.browse-meaning {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 3px;
+}
+
+.browse-empty {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 14px;
+  margin-top: 30px;
 }
 
 /* ---------- Summary screen ---------- */

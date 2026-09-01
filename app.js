@@ -279,7 +279,10 @@
     numMode: "learn",
     numCurrent: 0,
     numSeen: 0,
-    numQuiz: null // { items: [n, ...], index, correct, total, answered, lastCorrect, lastAnswer }
+    numQuiz: null, // { items: [n, ...], index, correct, total, answered, lastCorrect, lastAnswer }
+
+    // Browse (full word list)
+    browseLangKey: "es"
   };
 
   sectionNames(state.langKey).forEach((s) => state.activeSections.add(s));
@@ -292,7 +295,8 @@
     numbersHome: "home",
     numbersLearn: "numbersHome",
     numbersQuiz: "numbersHome",
-    numbersSummary: "numbersHome"
+    numbersSummary: "numbersHome",
+    browse: "home"
   };
 
   const SCREEN_RENDERERS = {
@@ -302,7 +306,8 @@
     numbersHome: [() => "Numbers Trainer", renderNumbersHome],
     numbersLearn: [() => "Learn numbers", renderNumbersLearn],
     numbersQuiz: [() => "Numbers quiz", renderNumbersQuiz],
-    numbersSummary: [() => "Numbers round complete", renderNumbersSummary]
+    numbersSummary: [() => "Numbers round complete", renderNumbersSummary],
+    browse: [() => "Browse word list", renderBrowse]
   };
 
   function render() {
@@ -401,6 +406,11 @@
 
     document.getElementById("goNumbersBtn").addEventListener("click", () => {
       state.screen = "numbersHome";
+      render();
+    });
+
+    document.getElementById("goBrowseBtn").addEventListener("click", () => {
+      state.screen = "browse";
       render();
     });
 
@@ -677,6 +687,103 @@
     document.getElementById("menuBtn").addEventListener("click", () => {
       state.screen = "home";
       render();
+    });
+  }
+
+  /* ---------- browse (full word list) screen ---------- */
+
+  function renderBrowse() {
+    const tpl = document.getElementById("tpl-browse");
+    app.appendChild(tpl.content.cloneNode(true));
+
+    const langTabs = document.getElementById("browseLangTabs");
+    Object.keys(PHRASE_DATA).forEach((key) => {
+      const lang = PHRASE_DATA[key];
+      const btn = document.createElement("button");
+      btn.className = "lang-tab" + (state.browseLangKey === key ? " active" : "");
+      btn.innerHTML = `<span class="flag">${lang.flag}</span>${lang.label}<span class="sub">${lang.sublabel}</span>`;
+      btn.addEventListener("click", () => {
+        state.browseLangKey = key;
+        render();
+      });
+      langTabs.appendChild(btn);
+    });
+
+    const lang = PHRASE_DATA[state.browseLangKey];
+    const listEl = document.getElementById("browseList");
+    const rows = []; // { el, searchText }
+
+    // Group DECKS[langKey] back by section, preserving the guide's own
+    // section order (DECKS was built in that order, with Numbers last).
+    const bySection = new Map();
+    DECKS[state.browseLangKey].forEach((card) => {
+      if (!bySection.has(card.section)) bySection.set(card.section, []);
+      bySection.get(card.section).push(card);
+    });
+
+    bySection.forEach((cards, sectionName) => {
+      const header = document.createElement("h3");
+      header.className = "browse-section-header";
+      header.textContent = sectionName;
+      listEl.appendChild(header);
+
+      cards.forEach((card) => {
+        const row = document.createElement("div");
+        row.className = "browse-row";
+
+        const speakBtn = document.createElement("button");
+        speakBtn.className = "browse-speak-btn";
+        speakBtn.setAttribute("aria-label", "Hear pronunciation");
+        speakBtn.textContent = "🔊";
+        speakBtn.addEventListener("click", () => speak(card.speak, lang.locale));
+
+        const text = document.createElement("div");
+        text.className = "browse-text";
+        text.innerHTML = `
+          <div class="browse-term">${card.native}</div>
+          ${card.pron ? `<div class="browse-pron">${card.pron}</div>` : ""}
+          <div class="browse-meaning">${card.meaning}</div>
+        `;
+
+        row.appendChild(speakBtn);
+        row.appendChild(text);
+        listEl.appendChild(row);
+
+        rows.push({ el: row, searchText: normalize(`${card.native} ${card.meaning}`) });
+      });
+    });
+
+    const searchInput = document.getElementById("browseSearch");
+    searchInput.addEventListener("input", () => {
+      const query = normalize(searchInput.value);
+      let anyVisible = false;
+      rows.forEach(({ el, searchText }) => {
+        const match = !query || searchText.includes(query);
+        el.classList.toggle("no-match", !match);
+        if (match) anyVisible = true;
+      });
+      // Section headers with zero visible rows would look like a dangling
+      // label, so hide the ones whose whole group got filtered out too.
+      listEl.querySelectorAll(".browse-section-header").forEach((header) => {
+        let sib = header.nextElementSibling;
+        let hasVisible = false;
+        while (sib && !sib.classList.contains("browse-section-header")) {
+          if (!sib.classList.contains("no-match")) hasVisible = true;
+          sib = sib.nextElementSibling;
+        }
+        header.classList.toggle("no-match", !hasVisible);
+      });
+      let empty = listEl.querySelector(".browse-empty");
+      if (!anyVisible && query) {
+        if (!empty) {
+          empty = document.createElement("p");
+          empty.className = "browse-empty";
+          empty.textContent = "No matches.";
+          listEl.appendChild(empty);
+        }
+      } else if (empty) {
+        empty.remove();
+      }
     });
   }
 

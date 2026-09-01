@@ -23,6 +23,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Stamp deploy version into the page
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          BUILD_DATE=$(date -u +'%Y-%m-%d %H:%M UTC')
+          sed -i "s|>local<|>#${{ github.run_number }} · ${SHORT_SHA}<|" index.html
+          sed -i "s|Local build (not deployed)|Deployed ${BUILD_DATE} from commit ${SHORT_SHA} (run #${{ github.run_number }})|" index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

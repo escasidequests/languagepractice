@@ -13,7 +13,7 @@
   <header class="topbar">
     <button id="backBtn" class="icon-btn" hidden aria-label="Back to menu">←</button>
     <h1 id="topTitle">Phrase Practice</h1>
-    <span class="topbar-spacer"></span>
+    <span class="version-badge" id="versionBadge" title="Local build (not deployed)">local</span>
   </header>
 
   <main id="app"></main>
@@ -21,6 +21,7 @@
   <template id="tpl-home">
     <section class="screen home">
       <button class="numbers-cta" id="goNumbersBtn">🔢 Numbers Trainer (0–9,999) →</button>
+      <button class="numbers-cta" id="goBrowseBtn">📋 Browse full word list →</button>
 
       <div class="lang-tabs" id="langTabs"></div>
 
@@ -107,6 +108,16 @@
       <div class="summary-stats" id="summaryStats"></div>
       <button class="primary-btn" id="practiceWeakBtn">Practice the shaky ones again</button>
       <button class="secondary-btn" id="menuBtn">Back to menu</button>
+    </section>
+  </template>
+
+  <template id="tpl-browse">
+    <section class="screen browse">
+      <div class="lang-tabs" id="browseLangTabs"></div>
+
+      <input type="search" id="browseSearch" class="browse-search" placeholder="Search terms or meanings…" autocomplete="off" />
+
+      <div id="browseList"></div>
     </section>
   </template>
 
