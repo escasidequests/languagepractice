@@ -592,6 +592,10 @@ main#app {
 
 /* ---------- Browse (full word list) screen ---------- */
 
+.browse-direction-row {
+  margin: 16px 0 0;
+}
+
 .browse-search {
   width: 100%;
   padding: 13px 16px;
@@ -600,7 +604,7 @@ main#app {
   background: var(--surface);
   color: var(--ink);
   font-size: 15px;
-  margin: 16px 0;
+  margin: 14px 0 16px;
   box-shadow: var(--shadow);
 }
 

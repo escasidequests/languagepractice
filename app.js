@@ -282,7 +282,8 @@
     numQuiz: null, // { items: [n, ...], index, correct, total, answered, lastCorrect, lastAnswer }
 
     // Browse (full word list)
-    browseLangKey: "es"
+    browseLangKey: "es",
+    browseDirection: "native-en" // "native-en" = term bolded on top; "en-native" = English bolded on top
   };
 
   sectionNames(state.langKey).forEach((s) => state.activeSections.add(s));
@@ -709,9 +710,18 @@
       langTabs.appendChild(btn);
     });
 
+    document.querySelectorAll("#browseDirectionRow .pill").forEach((btn) => {
+      if (btn.dataset.dir === state.browseDirection) btn.classList.add("active");
+      btn.addEventListener("click", () => {
+        state.browseDirection = btn.dataset.dir;
+        render();
+      });
+    });
+
     const lang = PHRASE_DATA[state.browseLangKey];
     const listEl = document.getElementById("browseList");
     const rows = []; // { el, searchText }
+    const termFirst = state.browseDirection === "native-en";
 
     // Group DECKS[langKey] back by section, preserving the guide's own
     // section order (DECKS was built in that order, with Numbers last).
@@ -737,13 +747,12 @@
         speakBtn.textContent = "🔊";
         speakBtn.addEventListener("click", () => speak(card.speak, lang.locale));
 
+        const pronHtml = card.pron ? `<div class="browse-pron">${card.pron}</div>` : "";
         const text = document.createElement("div");
         text.className = "browse-text";
-        text.innerHTML = `
-          <div class="browse-term">${card.native}</div>
-          ${card.pron ? `<div class="browse-pron">${card.pron}</div>` : ""}
-          <div class="browse-meaning">${card.meaning}</div>
-        `;
+        text.innerHTML = termFirst
+          ? `<div class="browse-term">${card.native}</div>${pronHtml}<div class="browse-meaning">${card.meaning}</div>`
+          : `<div class="browse-term">${card.meaning}</div><div class="browse-meaning">${card.native}</div>${pronHtml}`;
 
         row.appendChild(speakBtn);
         row.appendChild(text);
