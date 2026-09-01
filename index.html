@@ -63,6 +63,17 @@
       <button class="primary-btn" id="startBtn">Start practicing</button>
 
       <p class="deck-count" id="deckCount"></p>
+
+      <div class="card-panel" id="backupPanel">
+        <h2>Backup</h2>
+        <p class="backup-hint">Your added words, sentences, and progress live only in this browser. Export a copy so you can restore it if this device's storage ever gets cleared.</p>
+        <div class="backup-actions">
+          <button type="button" class="secondary-btn" id="exportBtn">⬇️ Export backup</button>
+          <button type="button" class="secondary-btn" id="importBtn">⬆️ Import backup</button>
+        </div>
+        <input type="file" id="importFileInput" accept="application/json,.json" hidden />
+        <p class="backup-status" id="backupStatus" hidden></p>
+      </div>
     </section>
   </template>
 

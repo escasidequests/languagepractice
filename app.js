@@ -162,6 +162,98 @@
     saveSentencesStore(store);
   }
 
+  /* ---------------- backup: export / import everything ---------------- */
+  // Bundles every localStorage key this app writes (added words, saved
+  // sentences, practice stats, voice preference) into one downloadable
+  // JSON file, and can restore from one — the insurance policy against
+  // Safari's 7-day storage purge or a cleared/new device.
+
+  const BACKUP_APP_ID = "phrase-practice-backup";
+
+  function readJsonKey(key) {
+    try {
+      return JSON.parse(localStorage.getItem(key) || "null");
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function buildBackupPayload() {
+    return {
+      app: BACKUP_APP_ID,
+      exportedAt: new Date().toISOString(),
+      version: 1,
+      data: {
+        customWords: readJsonKey(CUSTOM_WORDS_KEY) || {},
+        sentences: readJsonKey(SENTENCES_KEY) || {},
+        stats: readJsonKey(STATS_KEY) || {},
+        voicePref: readJsonKey(VOICE_PREF_KEY) || {}
+      }
+    };
+  }
+
+  function exportBackup() {
+    const payload = buildBackupPayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `phrase-practice-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function setBackupStatus(el, message, isError) {
+    el.textContent = message;
+    el.className = "backup-status " + (isError ? "error" : "success");
+    el.hidden = false;
+  }
+
+  function importBackupFromFile(file, statusEl) {
+    const reader = new FileReader();
+    reader.onerror = () => setBackupStatus(statusEl, "Couldn't read that file.", true);
+    reader.onload = () => {
+      let parsed;
+      try {
+        parsed = JSON.parse(reader.result);
+      } catch (e) {
+        setBackupStatus(statusEl, "That file isn't valid JSON.", true);
+        return;
+      }
+      if (!parsed || parsed.app !== BACKUP_APP_ID || typeof parsed.data !== "object") {
+        setBackupStatus(statusEl, "That doesn't look like a Phrase Practice backup file.", true);
+        return;
+      }
+      const ok = window.confirm(
+        "This will replace your added words, sentences, voice preference, and practice progress on this device with what's in the backup file. Continue?"
+      );
+      if (!ok) return;
+
+      const d = parsed.data;
+      try {
+        if (d.customWords !== undefined) localStorage.setItem(CUSTOM_WORDS_KEY, JSON.stringify(d.customWords));
+        if (d.sentences !== undefined) localStorage.setItem(SENTENCES_KEY, JSON.stringify(d.sentences));
+        if (d.stats !== undefined) {
+          localStorage.setItem(STATS_KEY, JSON.stringify(d.stats));
+          STATS = d.stats; // keep the in-memory cache in sync with what we just wrote
+        }
+        if (d.voicePref !== undefined) localStorage.setItem(VOICE_PREF_KEY, JSON.stringify(d.voicePref));
+      } catch (e) {
+        setBackupStatus(statusEl, "Couldn't write to storage on this device.", true);
+        return;
+      }
+      // The home screen is about to fully re-render (deck counts, sections,
+      // etc. all need to reflect the restored data), which discards the
+      // current statusEl — so hand the success message to render() via
+      // state instead of writing it directly here.
+      state.backupFlashMessage = { text: "Backup restored!", error: false };
+      render();
+    };
+    reader.readAsText(file);
+  }
+
   function sectionNames(langKey) {
     const names = PHRASE_DATA[langKey].sections.map((s) => s.name);
     if (PHRASE_DATA[langKey].numbers) names.push("Numbers");
@@ -491,7 +583,13 @@
     addWordLangKey: "es",
 
     // Saved sentences
-    sentencesLangKey: "es"
+    sentencesLangKey: "es",
+
+    // Backup: a one-shot flash message shown on the next home render, since
+    // a successful import triggers a full re-render that would otherwise
+    // wipe out a status message written directly to the (about to be
+    // discarded) DOM.
+    backupFlashMessage: null
   };
 
   sectionNames(state.langKey).forEach((s) => state.activeSections.add(s));
@@ -635,6 +733,22 @@
     document.getElementById("goSentencesBtn").addEventListener("click", () => {
       state.screen = "sentences";
       render();
+    });
+
+    const backupStatusEl = document.getElementById("backupStatus");
+    if (state.backupFlashMessage) {
+      setBackupStatus(backupStatusEl, state.backupFlashMessage.text, state.backupFlashMessage.error);
+      state.backupFlashMessage = null;
+    }
+
+    document.getElementById("exportBtn").addEventListener("click", exportBackup);
+
+    const importFileInput = document.getElementById("importFileInput");
+    document.getElementById("importBtn").addEventListener("click", () => importFileInput.click());
+    importFileInput.addEventListener("change", () => {
+      const file = importFileInput.files[0];
+      if (file) importBackupFromFile(file, backupStatusEl);
+      importFileInput.value = "";
     });
 
     updateDeckCount();

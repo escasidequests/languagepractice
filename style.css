@@ -240,6 +240,32 @@ main#app {
   margin-top: 12px;
 }
 
+.backup-hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0 0 12px;
+}
+
+.backup-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.backup-actions .secondary-btn {
+  margin-top: 0;
+  flex: 1;
+}
+
+.backup-status {
+  text-align: center;
+  font-size: 13px;
+  margin: 10px 0 0;
+}
+
+.backup-status.success { color: var(--know); }
+.backup-status.error { color: var(--miss); }
+
 /* ---------- Session screen ---------- */
 
 .progress-row {
