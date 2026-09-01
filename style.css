@@ -411,6 +411,29 @@ main#app {
 .rate-btn.miss { background: var(--miss-soft); color: var(--miss); }
 .rate-btn.know { background: var(--know-soft); color: var(--know); }
 
+.voice-select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.voice-test-btn {
+  display: block;
+  font-size: 13px;
+}
+
+.voice-hint {
+  margin: 12px 2px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
 .mode-hint {
   margin: 10px 2px 0;
   font-size: 13px;

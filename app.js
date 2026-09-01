@@ -99,18 +99,62 @@
 
   /* ---------------- speech: pronunciation ---------------- */
 
+  const VOICE_PREF_KEY = "phrasePractice.voicePref.v1";
+
+  function loadVoicePrefs() {
+    try {
+      return JSON.parse(localStorage.getItem(VOICE_PREF_KEY) || "{}");
+    } catch (e) {
+      return {};
+    }
+  }
+  function saveVoicePref(locale, voiceName) {
+    try {
+      const prefs = loadVoicePrefs();
+      prefs[locale] = voiceName;
+      localStorage.setItem(VOICE_PREF_KEY, JSON.stringify(prefs));
+    } catch (e) {
+      /* storage unavailable — voice picking still works, just not remembered */
+    }
+  }
+
   let voicesCache = [];
   function loadVoices() {
     voicesCache = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
   }
   if (window.speechSynthesis) {
     loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
+    window.speechSynthesis.onvoiceschanged = () => {
+      loadVoices();
+      // Voices often load asynchronously (notably on iOS Safari) — if we're
+      // sitting on a screen with a voice picker, refresh it once they arrive.
+      // (Guarded: on the off chance this fires before `state`/`render` below
+      // have been initialized, just skip the refresh — a later navigation
+      // will render with the now-loaded voices anyway.)
+      try {
+        if (state.screen === "home" || state.screen === "numbersHome") render();
+      } catch (e) {}
+    };
+  }
+
+  // Every voice installed for a given language (matched by locale prefix,
+  // e.g. "es" or "pt"), regardless of exact region — so a device with only
+  // es-MX or pt-BR still shows something pickable instead of silently
+  // falling back to a mismatched accent.
+  function voicesForLang(langPrefix) {
+    if (!voicesCache.length) loadVoices();
+    return voicesCache.filter((v) => v.lang && v.lang.toLowerCase().startsWith(langPrefix));
   }
 
   function pickVoice(locale) {
     if (!voicesCache.length) loadVoices();
     const short = locale.split("-")[0];
+    const prefs = loadVoicePrefs();
+    const preferredName = prefs[locale];
+    if (preferredName) {
+      const preferred = voicesForLang(short).find((v) => v.name === preferredName);
+      if (preferred) return preferred;
+    }
     return (
       voicesCache.find((v) => v.lang === locale) ||
       voicesCache.find((v) => v.lang && v.lang.toLowerCase().startsWith(short)) ||
@@ -125,8 +169,57 @@
     utter.lang = locale;
     utter.rate = 0.88;
     const voice = pickVoice(locale);
-    if (voice) utter.voice = voice;
+    if (voice) {
+      try {
+        utter.voice = voice;
+      } catch (e) {
+        /* fall back to lang-only selection if the voice object is somehow invalid */
+      }
+    }
     window.speechSynthesis.speak(utter);
+  }
+
+  const VOICE_SAMPLE_TEXT = {
+    es: "Hola, buenos días. Un café con leche, por favor.",
+    pt: "Olá, bom dia. Um café com leite, por favor."
+  };
+
+  // Wires a <select> + "test" button to pick/preview/remember a voice for
+  // langKey. Shared by both the phrase-practice home screen and the Numbers
+  // Trainer home screen, each with their own language selector.
+  function setupVoicePicker(selectEl, testBtnEl, langKey) {
+    const lang = PHRASE_DATA[langKey];
+    const prefix = lang.locale.split("-")[0];
+    const voices = voicesForLang(prefix);
+    const current = pickVoice(lang.locale);
+
+    selectEl.innerHTML = "";
+    if (!voices.length) {
+      const opt = document.createElement("option");
+      opt.textContent = `No ${lang.label} voice found on this device`;
+      opt.disabled = true;
+      opt.selected = true;
+      selectEl.appendChild(opt);
+      selectEl.disabled = true;
+    } else {
+      selectEl.disabled = false;
+      voices.forEach((v) => {
+        const opt = document.createElement("option");
+        opt.value = v.name;
+        opt.textContent = `${v.name} (${v.lang})${v.localService ? "" : " — online"}`;
+        if (current && v.name === current.name) opt.selected = true;
+        selectEl.appendChild(opt);
+      });
+    }
+
+    selectEl.addEventListener("change", () => {
+      saveVoicePref(lang.locale, selectEl.value);
+      speak(VOICE_SAMPLE_TEXT[langKey] || "", lang.locale);
+    });
+
+    testBtnEl.addEventListener("click", () => {
+      speak(VOICE_SAMPLE_TEXT[langKey] || "", lang.locale);
+    });
   }
 
   /* ---------------- speech: recognition compare (optional) ---------------- */
@@ -246,6 +339,8 @@
       });
       langTabs.appendChild(btn);
     });
+
+    setupVoicePicker(document.getElementById("voiceSelect"), document.getElementById("voiceTestBtn"), state.langKey);
 
     document.querySelectorAll("#directionRow .pill").forEach((btn) => {
       if (btn.dataset.dir === state.direction) btn.classList.add("active");
@@ -610,6 +705,8 @@
       });
       langTabs.appendChild(btn);
     });
+
+    setupVoicePicker(document.getElementById("numVoiceSelect"), document.getElementById("numVoiceTestBtn"), state.numLangKey);
 
     document.querySelectorAll("#numRangeRow .pill").forEach((btn) => {
       if (btn.dataset.range === state.numRange) btn.classList.add("active");
