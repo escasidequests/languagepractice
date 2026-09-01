@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#2c5f5a" />
+  <title>Phrase Practice</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗣️</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <button id="backBtn" class="icon-btn" hidden aria-label="Back to menu">←</button>
+    <h1 id="topTitle">Phrase Practice</h1>
+    <span class="topbar-spacer"></span>
+  </header>
+
+  <main id="app"></main>
+
+  <template id="tpl-home">
+    <section class="screen home">
+      <div class="lang-tabs" id="langTabs"></div>
+
+      <div class="card-panel">
+        <h2>Direction</h2>
+        <div class="pill-row" id="directionRow">
+          <button class="pill" data-dir="native-en">See term → recall English</button>
+          <button class="pill" data-dir="en-native">See English → recall term</button>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <h2>Sections</h2>
+        <div class="pill-row" id="sectionRow"></div>
+        <div class="section-actions">
+          <button class="link-btn" id="allSections">All</button>
+          <button class="link-btn" id="noSections">None</button>
+        </div>
+      </div>
+
+      <div class="card-panel" id="weakOnlyPanel">
+        <label class="switch-row">
+          <input type="checkbox" id="weakOnly" />
+          <span>Only cards I've missed before</span>
+        </label>
+      </div>
+
+      <button class="primary-btn" id="startBtn">Start practicing</button>
+
+      <p class="deck-count" id="deckCount"></p>
+    </section>
+  </template>
+
+  <template id="tpl-session">
+    <section class="screen session">
+      <div class="progress-row">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <span id="progressLabel" class="progress-label"></span>
+      </div>
+
+      <div class="flashcard" id="flashcard">
+        <div class="flashcard-inner" id="flashcardInner">
+          <div class="face face-front">
+            <span class="face-tag" id="frontTag"></span>
+            <p class="face-text" id="frontText"></p>
+            <p class="face-sub" id="frontSub"></p>
+          </div>
+          <div class="face face-back">
+            <span class="face-tag" id="backTag"></span>
+            <p class="face-text" id="backText"></p>
+            <p class="face-sub" id="backSub"></p>
+          </div>
+        </div>
+      </div>
+      <p class="tap-hint" id="tapHint">Tap the card to flip</p>
+
+      <div class="audio-row">
+        <button class="round-btn" id="speakBtn" aria-label="Hear pronunciation">🔊</button>
+        <button class="round-btn" id="recordBtn" aria-label="Record yourself">🎤</button>
+        <button class="round-btn" id="playbackBtn" aria-label="Play your recording" hidden>▶️</button>
+      </div>
+      <p class="record-status" id="recordStatus"></p>
+      <div class="match-badge" id="matchBadge" hidden></div>
+
+      <div class="rating-row" id="ratingRow" hidden>
+        <button class="rate-btn miss" id="missBtn">Didn't know it</button>
+        <button class="rate-btn know" id="knowBtn">Knew it</button>
+      </div>
+    </section>
+  </template>
+
+  <template id="tpl-summary">
+    <section class="screen summary">
+      <h2>Session complete 🎉</h2>
+      <div class="summary-stats" id="summaryStats"></div>
+      <button class="primary-btn" id="practiceWeakBtn">Practice the shaky ones again</button>
+      <button class="secondary-btn" id="menuBtn">Back to menu</button>
+    </section>
+  </template>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
